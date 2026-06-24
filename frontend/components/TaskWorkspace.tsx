@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { AlertCircle, Inbox } from "lucide-react";
+import { toast } from "sonner";
 import { Skeleton } from "@/components/ui/skeleton";
 import { createClient } from "@/lib/supabase/client";
 import { createTask } from "@/lib/tasks/api";
@@ -52,6 +53,7 @@ export function TaskWorkspace() {
 
     if (!session) {
       setError("You need to sign in again before creating a task.");
+      toast.error("Your session expired. Sign in again.");
       setIsSubmitting(false);
       return;
     }
@@ -59,8 +61,11 @@ export function TaskWorkspace() {
     try {
       const created = await createTask({ title, accessToken: session.access_token });
       setTasks((currentTasks) => [toTask(created), ...currentTasks]);
+      toast.success("Task plan created.");
     } catch (createError) {
-      setError(createError instanceof Error ? createError.message : "Task creation failed.");
+      const message = createError instanceof Error ? createError.message : "Task creation failed.";
+      setError(message);
+      toast.error(message);
     } finally {
       setIsSubmitting(false);
     }

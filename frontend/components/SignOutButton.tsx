@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Loader2, LogOut } from "lucide-react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { createClient } from "@/lib/supabase/client";
 
@@ -26,9 +27,11 @@ export function SignOutButton({ compact = false }: SignOutButtonProps) {
       if (error) {
         throw error;
       }
+      toast.success("Signed out.");
       router.replace("/login");
       router.refresh();
     } catch {
+      toast.error("Could not complete sign out cleanly. Redirecting.");
       window.location.assign("/login");
     } finally {
       setIsLoading(false);

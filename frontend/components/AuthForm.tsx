@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { FormEvent, useState } from "react";
 import { ArrowRight, Loader2 } from "lucide-react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -55,18 +56,23 @@ export function AuthForm({ mode }: AuthFormProps) {
 
       if (authResponse.error) {
         setError(authResponse.error.message);
+        toast.error(authResponse.error.message);
         return;
       }
 
       if (!isLogin && !authResponse.data.session) {
         setMessage("Check your email to confirm your account, then sign in.");
+        toast.success("Account created. Check your email to confirm it.");
         return;
       }
 
+      toast.success(isLogin ? "Signed in." : "Account created.");
       router.push(nextPath);
       router.refresh();
     } catch (authError) {
-      setError(getAuthErrorMessage(authError));
+      const message = getAuthErrorMessage(authError);
+      setError(message);
+      toast.error(message);
     } finally {
       setIsSubmitting(false);
     }

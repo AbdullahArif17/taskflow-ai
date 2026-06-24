@@ -2,15 +2,31 @@
 
 AI task-planning SaaS built with Next.js, FastAPI, Supabase, Gemini, and Stripe.
 
+![TaskFlow AI login screen](docs/screenshots/login-desktop.png)
+
+## Features
+
+- Email/password authentication with protected dashboard routes
+- Gemini-generated plans with 3-6 actionable steps
+- Supabase persistence, row-level security, and realtime activity
+- Atomic five-task monthly free quota with automatic monthly reset
+- Stripe subscription checkout and lifecycle webhooks
+- Responsive dashboard, loading states, error recovery, and toast notifications
+
+## Links
+
+- Repository: https://github.com/AbdullahArif17/taskflow-ai
+- Live frontend: add after Vercel deployment
+- Live API: add after backend deployment
+
 ## Production Architecture
 
 - Frontend: deploy `frontend/` to Vercel or another Node.js host.
-- Backend: deploy `backend/` with its `Dockerfile` or `Procfile`.
+- Backend: deploy `backend/` to Hugging Face Spaces with its `Dockerfile`, or another Docker host.
 - Database and authentication: Supabase.
 - Billing: Stripe subscriptions and webhooks.
 
-The frontend and backend must be deployed separately because only `frontend/`
-currently contains a Git repository.
+The frontend and backend deploy separately from the same monorepo.
 
 ## 1. Supabase
 

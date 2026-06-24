@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Check, CreditCard, Loader2 } from "lucide-react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -54,6 +55,7 @@ export function PricingTable() {
 
     if (!session) {
       setError("You need to sign in again before upgrading.");
+      toast.error("Your session expired. Sign in again.");
       setIsCheckoutLoading(false);
       return;
     }
@@ -62,7 +64,9 @@ export function PricingTable() {
       const checkout = await createCheckoutSession(session.access_token);
       window.location.href = checkout.url;
     } catch (checkoutError) {
-      setError(checkoutError instanceof Error ? checkoutError.message : "Checkout failed.");
+      const message = checkoutError instanceof Error ? checkoutError.message : "Checkout failed.";
+      setError(message);
+      toast.error(message);
       setIsCheckoutLoading(false);
     }
   }
