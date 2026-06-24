@@ -1,42 +1,40 @@
-# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+# Local agent/editor state
+.agents/
+.claude/
+.qwen/
+.windsurf/
+skills-lock.json
 
-# dependencies
-/node_modules
-/.pnp
-.pnp.*
-.yarn/*
-!.yarn/patches
-!.yarn/plugins
-!.yarn/releases
-!.yarn/versions
+# Environment and secrets
+.env
+.env.*
+!.env.example
+!.env.local.example
+backend/.env
+frontend/.env.local
 
-# testing
-/coverage
+# Python
+.venv/
+backend/.venv/
+**/__pycache__/
+*.pyc
+*.pyo
 
-# next.js
-/.next/
-/out/
+# Node / Next.js
+node_modules/
+frontend/node_modules/
+frontend/.next/
+frontend/out/
+frontend/build/
+*.tsbuildinfo
 
-# production
-/build
+# Logs and temporary output
+*.log
+backend/uvicorn*.log
+frontend/next-dev*.log
+frontend/tmp/
 
-# misc
+# Deployment/editor metadata
+.vercel/
 .DS_Store
 *.pem
-
-# debug
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-.pnpm-debug.log*
-next-dev.*.log
-
-# env files (can opt-in for committing if needed)
-.env*
-
-# vercel
-.vercel
-
-# typescript
-*.tsbuildinfo
-next-env.d.ts
