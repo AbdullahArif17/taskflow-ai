@@ -31,18 +31,17 @@ export function GmailIntegrationCard() {
   const [body, setBody] = useState("");
 
   useEffect(() => {
-    void getGmailStatusForUser();
-  }, []);
-
-  async function getGmailStatusForUser() {
-    try {
-      setStatus(await getGmailStatus(await accessToken()));
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Could not load Gmail status.");
-    } finally {
-      setLoading(false);
+    async function loadStatus() {
+      try {
+        setStatus(await getGmailStatus(await accessToken()));
+      } catch (error) {
+        toast.error(error instanceof Error ? error.message : "Could not load Gmail status.");
+      } finally {
+        setLoading(false);
+      }
     }
-  }
+    void loadStatus();
+  }, []);
 
   async function handleConnection() {
     setLoading(true);

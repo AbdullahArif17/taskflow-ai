@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { createClient } from "@/lib/supabase/client";
 import { createTask, deleteTask, updateTaskStep } from "@/lib/tasks/api";
@@ -23,26 +23,23 @@ export function useTaskWorkspace() {
   const [deletingTaskId, setDeletingTaskId] = useState<string>();
   const [error, setError] = useState<string | null>(null);
 
-  const loadTasks = useCallback(async () => {
-    setIsLoading(true);
-    setError(null);
-    try {
-      const { data, error: taskError } = await createClient()
-        .from("tasks")
-        .select("id,title,status,created_at,task_steps(id,step_order,description,status)")
-        .order("created_at", { ascending: false });
-      if (taskError) throw taskError;
-      setTasks((data ?? []) as Task[]);
-    } catch (loadError) {
-      setError(loadError instanceof Error ? loadError.message : "Could not load tasks.");
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
-
   useEffect(() => {
+    async function loadTasks() {
+      try {
+        const { data, error: taskError } = await createClient()
+          .from("tasks")
+          .select("id,title,status,created_at,task_steps(id,step_order,description,status)")
+          .order("created_at", { ascending: false });
+        if (taskError) throw taskError;
+        setTasks((data ?? []) as Task[]);
+      } catch (loadError) {
+        setError(loadError instanceof Error ? loadError.message : "Could not load tasks.");
+      } finally {
+        setIsLoading(false);
+      }
+    }
     void loadTasks();
-  }, [loadTasks]);
+  }, []);
 
   async function getAccessToken() {
     const { data } = await createClient().auth.getSession();
