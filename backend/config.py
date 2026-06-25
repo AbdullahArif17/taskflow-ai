@@ -16,6 +16,11 @@ class Settings(BaseSettings):
     stripe_secret_key: str | None = None
     stripe_webhook_secret: str | None = None
     stripe_pro_price_id: str | None = None
+    google_client_id: str | None = None
+    google_client_secret: str | None = None
+    google_redirect_uri: str = "http://localhost:8010/integrations/gmail/callback"
+    integration_encryption_key: str | None = None
+    oauth_state_secret: str | None = None
 
     model_config = SettingsConfigDict(
         env_file=".env",

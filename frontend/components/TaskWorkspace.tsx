@@ -1,112 +1,51 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
 import { AlertCircle, Inbox } from "lucide-react";
-import { toast } from "sonner";
-import { Skeleton } from "@/components/ui/skeleton";
-import { createClient } from "@/lib/supabase/client";
-import { createTask } from "@/lib/tasks/api";
-import type { CreateTaskResponse, Task } from "@/lib/tasks/types";
 import { AgentActivityFeed } from "@/components/AgentActivityFeed";
 import { TaskCard } from "@/components/TaskCard";
 import { TaskCreateForm } from "@/components/TaskCreateForm";
+import { Skeleton } from "@/components/ui/skeleton";
+import { useTaskWorkspace } from "@/lib/tasks/useTaskWorkspace";
 
 export function TaskWorkspace() {
-  const [tasks, setTasks] = useState<Task[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  const loadTasks = useCallback(async () => {
-    setIsLoading(true);
-    setError(null);
-    try {
-      const supabase = createClient();
-      const { data, error: taskError } = await supabase
-        .from("tasks")
-        .select("id,title,status,created_at,task_steps(id,step_order,description,status)")
-        .order("created_at", { ascending: false });
-
-      if (taskError) {
-        setError(taskError.message);
-      } else {
-        setTasks((data ?? []) as Task[]);
-      }
-    } catch (loadError) {
-      setError(loadError instanceof Error ? loadError.message : "Could not load tasks.");
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    void loadTasks();
-  }, [loadTasks]);
-
-  async function handleCreate(title: string) {
-    setIsSubmitting(true);
-    setError(null);
-    const supabase = createClient();
-    const {
-      data: { session },
-    } = await supabase.auth.getSession();
-
-    if (!session) {
-      setError("You need to sign in again before creating a task.");
-      toast.error("Your session expired. Sign in again.");
-      setIsSubmitting(false);
-      return;
-    }
-
-    try {
-      const created = await createTask({ title, accessToken: session.access_token });
-      setTasks((currentTasks) => [toTask(created), ...currentTasks]);
-      toast.success("Task plan created.");
-    } catch (createError) {
-      const message = createError instanceof Error ? createError.message : "Task creation failed.";
-      setError(message);
-      toast.error(message);
-    } finally {
-      setIsSubmitting(false);
-    }
-  }
+  const workspace = useTaskWorkspace();
 
   return (
     <div className="grid items-start gap-6 lg:grid-cols-[390px_minmax(0,1fr)] xl:grid-cols-[420px_minmax(0,1fr)]">
       <div className="space-y-4">
-        <TaskCreateForm isSubmitting={isSubmitting} onCreate={handleCreate} />
-        {error ? (
+        <TaskCreateForm isSubmitting={workspace.isSubmitting} onCreate={workspace.handleCreate} />
+        {workspace.error ? (
           <div className="flex gap-2 rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive">
             <AlertCircle className="mt-0.5 size-4" />
-            <p>{error}</p>
+            <p>{workspace.error}</p>
           </div>
         ) : null}
         <AgentActivityFeed />
       </div>
       <section className="min-w-0 space-y-4">
-        {isLoading ? <TaskSkeletons /> : null}
-        {!isLoading && tasks.length === 0 ? <EmptyTasks /> : null}
-        {!isLoading ? tasks.map((task) => <TaskCard key={task.id} task={task} />) : null}
+        {workspace.isLoading ? <TaskSkeletons /> : null}
+        {!workspace.isLoading && workspace.tasks.length === 0 ? <EmptyTasks /> : null}
+        {!workspace.isLoading
+          ? workspace.tasks.map((task) => (
+              <TaskCard
+                busyStepId={workspace.busyStepId}
+                isDeleting={workspace.deletingTaskId === task.id}
+                key={task.id}
+                onDelete={workspace.handleDelete}
+                onToggleStep={workspace.handleToggleStep}
+                task={task}
+              />
+            ))
+          : null}
       </section>
     </div>
   );
 }
 
-function toTask(task: CreateTaskResponse): Task {
-  return {
-    id: task.id,
-    title: task.title,
-    status: task.status,
-    task_steps: task.steps,
-  };
-}
-
 function TaskSkeletons() {
   return (
     <div className="space-y-4">
-      {[0, 1, 2].map((item) => (
-        <Skeleton className="h-40 w-full rounded-lg" key={item} />
-      ))}
+      {[0, 1, 2].map((item) => <Skeleton className="h-40 w-full rounded-lg" key={item} />)}
     </div>
   );
 }

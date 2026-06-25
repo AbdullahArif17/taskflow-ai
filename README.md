@@ -11,6 +11,8 @@ AI task-planning SaaS built with Next.js, FastAPI, Supabase, Gemini, and Stripe.
 - Supabase persistence, row-level security, and realtime activity
 - Atomic five-task monthly free quota with automatic monthly reset
 - Stripe subscription checkout and lifecycle webhooks
+- Interactive step completion with automatic task progress and deletion
+- Optional Gmail OAuth connection that creates drafts without sending
 - Responsive dashboard, loading states, error recovery, and toast notifications
 
 ## Links
@@ -66,6 +68,11 @@ FRONTEND_ORIGIN=https://your-frontend-domain
 STRIPE_SECRET_KEY=sk_live_...
 STRIPE_WEBHOOK_SECRET=whsec_...
 STRIPE_PRO_PRICE_ID=price_...
+GOOGLE_CLIENT_ID=...
+GOOGLE_CLIENT_SECRET=...
+GOOGLE_REDIRECT_URI=https://your-backend-domain/integrations/gmail/callback
+INTEGRATION_ENCRYPTION_KEY=...
+OAUTH_STATE_SECRET=...
 ```
 
 Verify:
@@ -95,7 +102,31 @@ Subscribe it to:
 
 Copy that endpoint's signing secret into `STRIPE_WEBHOOK_SECRET`.
 
-## 4. Frontend
+## 4. Gmail Draft Integration
+
+In Google Cloud:
+
+1. Enable the Gmail API.
+2. Configure the OAuth consent screen.
+3. Create a Web application OAuth client.
+4. Add this authorized redirect URI:
+
+```text
+https://your-backend-domain/integrations/gmail/callback
+```
+
+Generate backend secrets:
+
+```powershell
+python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
+python -c "import secrets; print(secrets.token_urlsafe(48))"
+```
+
+Use the first value for `INTEGRATION_ENCRYPTION_KEY` and the second for
+`OAUTH_STATE_SECRET`. Gmail access requests only the `gmail.compose` scope.
+TaskFlow creates drafts and never sends messages automatically.
+
+## 5. Frontend
 
 Deploy the `frontend/` directory and set:
 

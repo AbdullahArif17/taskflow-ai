@@ -37,6 +37,14 @@ create table if not exists agent_activity (
   created_at timestamp default now()
 );
 
+create table if not exists gmail_connections (
+  user_id uuid references auth.users on delete cascade primary key,
+  email text not null,
+  encrypted_refresh_token text not null,
+  created_at timestamp default now(),
+  updated_at timestamp default now()
+);
+
 create index if not exists tasks_user_created_idx
   on tasks (user_id, created_at desc);
 create index if not exists task_steps_task_order_idx
@@ -51,6 +59,7 @@ alter table profiles enable row level security;
 alter table tasks enable row level security;
 alter table task_steps enable row level security;
 alter table agent_activity enable row level security;
+alter table gmail_connections enable row level security;
 
 drop policy if exists "profiles_select_own" on profiles;
 drop policy if exists "profiles_insert_own" on profiles;
@@ -60,6 +69,7 @@ drop policy if exists "tasks_insert_own" on tasks;
 drop policy if exists "tasks_update_own" on tasks;
 drop policy if exists "task_steps_select_own" on task_steps;
 drop policy if exists "task_steps_insert_own" on task_steps;
+drop policy if exists "task_steps_update_own" on task_steps;
 drop policy if exists "agent_activity_select_own" on agent_activity;
 drop policy if exists "agent_activity_insert_own" on agent_activity;
 
@@ -70,6 +80,14 @@ create policy "tasks_update_own" on tasks for update using (auth.uid() = user_id
 
 create policy "task_steps_select_own" on task_steps
   for select using (
+    exists (
+      select 1 from tasks
+      where tasks.id = task_steps.task_id and tasks.user_id = auth.uid()
+    )
+  );
+
+create policy "task_steps_update_own" on task_steps
+  for update using (
     exists (
       select 1 from tasks
       where tasks.id = task_steps.task_id and tasks.user_id = auth.uid()

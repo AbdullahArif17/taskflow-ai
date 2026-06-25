@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 
 from config import get_settings
-from routers import agent, billing, tasks
+from routers import agent, billing, integrations, tasks
 
 
 settings = get_settings()
@@ -20,7 +20,7 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=sorted(allowed_origins),
     allow_credentials=False,
-    allow_methods=["GET", "POST", "OPTIONS"],
+    allow_methods=["GET", "POST", "PATCH", "DELETE", "OPTIONS"],
     allow_headers=["Authorization", "Content-Type"],
 )
 
@@ -42,3 +42,4 @@ async def health() -> dict[str, str]:
 app.include_router(tasks.router)
 app.include_router(agent.router)
 app.include_router(billing.router)
+app.include_router(integrations.router)

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { GmailIntegrationCard } from "@/components/settings/GmailIntegrationCard";
 import { ProfileSettingsCard } from "@/components/settings/ProfileSettingsCard";
 import { SecuritySettingsCard } from "@/components/settings/SecuritySettingsCard";
 import { UsageSettingsCard } from "@/components/settings/UsageSettingsCard";
@@ -33,6 +34,7 @@ export function SettingsForm({
         onError={setError}
       />
       <UsageSettingsCard plan={plan} tasksUsed={tasksUsed} />
+      <GmailIntegrationCard />
       <SecuritySettingsCard onError={setError} />
     </div>
   );

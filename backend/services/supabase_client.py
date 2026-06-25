@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from datetime import UTC, datetime
 from urllib.parse import quote
 
 import httpx
@@ -82,6 +83,36 @@ class SupabaseRestClient:
         ]
         return await self._insert("task_steps", step_rows)
 
+    async def get_task(self, user_id: str, task_id: str) -> dict | None:
+        tasks = await self._select(
+            "tasks",
+            (
+                f"id=eq.{quote(task_id)}&user_id=eq.{quote(user_id)}"
+                "&select=id,title,status,task_steps(id,step_order,description,status)"
+            ),
+        )
+        return tasks[0] if tasks else None
+
+    async def update_step_status(self, task_id: str, step_id: str, step_status: str) -> None:
+        await self._patch(
+            "task_steps",
+            f"id=eq.{quote(step_id)}&task_id=eq.{quote(task_id)}",
+            {"status": step_status},
+        )
+
+    async def update_task_status(self, task_id: str, task_status: str) -> None:
+        await self._patch(
+            "tasks",
+            f"id=eq.{quote(task_id)}",
+            {"status": task_status},
+        )
+
+    async def delete_task(self, task_id: str, user_id: str) -> None:
+        await self._delete(
+            "tasks",
+            f"id=eq.{quote(task_id)}&user_id=eq.{quote(user_id)}",
+        )
+
     async def add_activity(self, user_id: str, task_id: str | None, message: str) -> None:
         await self._insert(
             "agent_activity",
@@ -91,6 +122,39 @@ class SupabaseRestClient:
                 "message": message,
             },
         )
+
+    async def get_gmail_connection(self, user_id: str) -> dict | None:
+        connections = await self._select(
+            "gmail_connections",
+            f"user_id=eq.{quote(user_id)}&select=user_id,email,encrypted_refresh_token",
+        )
+        return connections[0] if connections else None
+
+    async def upsert_gmail_connection(
+        self,
+        user_id: str,
+        email: str,
+        encrypted_refresh_token: str,
+    ) -> None:
+        headers = {
+            **self.service_headers,
+            "Prefer": "resolution=merge-duplicates,return=minimal",
+        }
+        async with httpx.AsyncClient(timeout=self.timeout) as client:
+            response = await client.post(
+                f"{self.base_url}/rest/v1/gmail_connections",
+                headers=headers,
+                json={
+                    "user_id": user_id,
+                    "email": email,
+                    "encrypted_refresh_token": encrypted_refresh_token,
+                    "updated_at": datetime.now(UTC).isoformat(),
+                },
+            )
+        self._raise_for_status(response, "Could not save Gmail connection.")
+
+    async def delete_gmail_connection(self, user_id: str) -> None:
+        await self._delete("gmail_connections", f"user_id=eq.{quote(user_id)}")
 
     async def update_profile_billing(
         self,
@@ -172,6 +236,14 @@ class SupabaseRestClient:
             )
         self._raise_for_status(response, f"Could not call {function}.")
         return response.json()
+
+    async def _delete(self, table: str, filters: str) -> None:
+        async with httpx.AsyncClient(timeout=self.timeout) as client:
+            response = await client.delete(
+                f"{self.base_url}/rest/v1/{table}?{filters}",
+                headers=self.service_headers,
+            )
+        self._raise_for_status(response, f"Could not delete {table}.")
 
     @staticmethod
     def _raise_for_status(response: httpx.Response, fallback: str) -> None:

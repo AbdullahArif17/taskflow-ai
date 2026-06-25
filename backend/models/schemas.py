@@ -1,4 +1,6 @@
-from pydantic import BaseModel, Field, field_validator
+from typing import Literal
+
+from pydantic import BaseModel, EmailStr, Field, field_validator
 
 
 class TaskCreateRequest(BaseModel):
@@ -17,14 +19,42 @@ class TaskStepResponse(BaseModel):
     id: str
     step_order: int
     description: str
-    status: str
+    status: Literal["pending", "done"]
 
 
 class TaskResponse(BaseModel):
     id: str
     title: str
-    status: str
+    status: Literal["pending", "in_progress", "completed"]
     steps: list[TaskStepResponse]
+
+
+class TaskStepUpdateRequest(BaseModel):
+    status: Literal["pending", "done"]
+
+
+class DeleteResponse(BaseModel):
+    deleted: bool
+
+
+class GmailConnectResponse(BaseModel):
+    url: str
+
+
+class GmailStatusResponse(BaseModel):
+    configured: bool
+    connected: bool
+    email: str | None = None
+
+
+class GmailDraftRequest(BaseModel):
+    to: EmailStr
+    subject: str = Field(min_length=1, max_length=200)
+    body: str = Field(min_length=1, max_length=20000)
+
+
+class GmailDraftResponse(BaseModel):
+    draft_id: str
 
 
 class CheckoutSessionResponse(BaseModel):
